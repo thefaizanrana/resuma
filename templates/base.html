@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>{% block title %}Alfalah.app — Pakistan's Premium Job Platform{% endblock %}</title>
+    <meta name="description" content="RESUMA.pk — Pakistan's #1 dedicated job search and career platform. Built exclusively for Pakistan's workforce and enterprise employers.">
+    <title>{% block title %}RESUMA.pk — Pakistan's #1 Dedicated Job Search & Career Platform{% endblock %}</title>
     {% tailwind_css %}
     {% block extra_css %}{% endblock %}
 </head>
@@ -14,7 +15,7 @@
 <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200/80">
     <nav class="container mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
         <a href="{% url 'core:home' %}" class="text-2xl font-extrabold tracking-tight text-indigo-600">
-            Alfalah<span class="text-gray-900">.app</span>
+            RESUMA<span class="text-gray-900">.pk</span>
         </a>
         <ul class="hidden md:flex items-center space-x-8 text-sm font-medium">
             <li><a href="{% url 'core:home' %}" class="text-gray-600 hover:text-indigo-600 transition">Find Jobs</a></li>
@@ -68,7 +69,7 @@
 
 <footer class="bg-white border-t border-gray-200 mt-16">
     <div class="container mx-auto px-4 sm:px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p class="text-sm text-gray-500">&copy; {% now "Y" %} Alfalah.app. Built for Pakistan's workforce.</p>
+        <p class="text-sm text-gray-500">&copy; {% now "Y" %} RESUMA.pk. Built exclusively for Pakistan's workforce &amp; enterprise employers.</p>
         <ul class="flex items-center space-x-6 text-sm text-gray-500">
             <li><a href="{% url 'core:home' %}" class="hover:text-indigo-600 transition">Find Jobs</a></li>
             <li><a href="{% url 'core:register' %}" class="hover:text-indigo-600 transition">For Employers</a></li>

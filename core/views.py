@@ -8,7 +8,13 @@ from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
-from .forms import CandidateProfileForm, CompanyProfileForm, JobPostingForm, UserRegistrationForm
+from .forms import (
+    ApplicationStatusForm,
+    CandidateProfileForm,
+    CompanyProfileForm,
+    JobPostingForm,
+    UserRegistrationForm,
+)
 from .models import (
     PAKISTAN_CITIES,
     Application,
@@ -16,7 +22,13 @@ from .models import (
     CompanyProfile,
     JobPosting,
 )
-from .templatetags.currency_tags import pkr_compact
+from .templatetags.currency_tags import pkr
+
+
+def _salary_display(job):
+    if not job.salary_max_pkr:
+        return 'Salary not disclosed'
+    return f'PKR {pkr(job.salary_min_pkr)} - {pkr(job.salary_max_pkr)}/mo'
 
 
 def _serialize_jobs(jobs):
@@ -26,19 +38,23 @@ def _serialize_jobs(jobs):
             'title': job.title,
             'company': job.company.company_name,
             'city': job.city,
-            'job_type': job.job_type,
+            'workplace_type': job.workplace_type,
             'salary_min': job.salary_min_pkr,
             'salary_max': job.salary_max_pkr,
-            'salary_display': (
-                f'PKR {pkr_compact(job.salary_min_pkr)} - {pkr_compact(job.salary_max_pkr)}'
-                if job.salary_max_pkr else 'Salary not disclosed'
-            ),
+            'salary_display': _salary_display(job),
             'description': job.description,
+            'requirements': job.requirements,
             'verified': job.company.is_verified,
+            'premium': job.company.is_premium,
+            'featured': job.is_featured,
             'created': job.created_at.strftime('%b %d, %Y'),
         }
         for job in jobs
     ]
+
+
+def _match_requirements(job):
+    return (job.requirements or '').strip() or job.description
 
 
 def home_feed_view(request):
@@ -48,7 +64,7 @@ def home_feed_view(request):
     jobs = (
         JobPosting.objects.filter(is_active=True)
         .select_related('company')
-        .order_by('-created_at')
+        .order_by('-is_featured', '-created_at')
     )
     if query:
         jobs = jobs.filter(
@@ -151,12 +167,12 @@ def job_feed_view(request):
     jobs = (
         JobPosting.objects.filter(is_active=True)
         .select_related('company')
-        .order_by('-created_at')
+        .order_by('-is_featured', '-created_at')
     )
 
     scored_jobs = []
     for job in jobs:
-        score = job_matcher.calculate_match(candidate.raw_skills_text, job.description)
+        score = job_matcher.calculate_match(candidate.raw_skills_text, _match_requirements(job))
         scored_jobs.append({'job': job, 'score': score})
 
     scored_jobs.sort(key=lambda item: item['score'], reverse=True)
@@ -200,7 +216,7 @@ def apply_job_view(request, pk):
     )
     candidate = get_object_or_404(CandidateProfile, user=request.user)
 
-    score = job_matcher.calculate_match(candidate.raw_skills_text, job.description)
+    score = job_matcher.calculate_match(candidate.raw_skills_text, _match_requirements(job))
 
     application, created = Application.objects.get_or_create(
         candidate=candidate,
@@ -249,7 +265,35 @@ def employer_ats_view(request):
         'high_match': high_match,
         'medium_match': medium_match,
         'low_match': low_match,
+        'status_form': ApplicationStatusForm(),
     })
+
+
+@login_required
+@require_POST
+def application_status_view(request, pk):
+    if not request.user.is_employer:
+        messages.error(request, 'Only employer accounts can update application status.')
+        return redirect('core:home')
+
+    application = get_object_or_404(
+        Application.objects.select_related('job__company'),
+        pk=pk,
+        job__company__user=request.user,
+    )
+    form = ApplicationStatusForm(request.POST)
+    if form.is_valid():
+        application.status = form.cleaned_data['status']
+        application.save(update_fields=['status'])
+        messages.success(
+            request,
+            f'Status for {application.candidate.user.get_full_name() or application.candidate.user.username} '
+            f'updated to "{application.get_status_display()}".',
+        )
+    else:
+        messages.error(request, 'Invalid status value.')
+
+    return redirect('core:ats')
 
 
 def job_detail_view(request, pk):

@@ -1,16 +1,17 @@
 {% extends 'base.html' %}
 {% load currency_tags %}
 
-{% block title %}Find Jobs in Pakistan | Alfalah.app{% endblock %}
+{% block title %}Find Jobs in Pakistan | RESUMA.pk{% endblock %}
 
 {% block content %}
 <section class="bg-gradient-to-br from-indigo-600 via-indigo-500 to-violet-600">
     <div class="container mx-auto px-4 sm:px-6 py-14 sm:py-16 text-center">
         <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
-            Find Your Next Career Move in Pakistan.
+            Pakistan's #1 Dedicated Job Search &amp; Career Platform
         </h1>
         <p class="mt-4 text-lg text-indigo-100 max-w-2xl mx-auto">
-            Verified employers, intelligent C++ match scoring, and a feed that never slows down.
+            Built exclusively for Pakistan's workforce &amp; enterprise employers. Verified companies,
+            intelligent C++ match scoring, and a feed that never slows down.
         </p>
         <form method="get" action="{% url 'core:home' %}" class="mt-8 mx-auto max-w-3xl flex flex-col sm:flex-row gap-3">
             <input
@@ -60,9 +61,17 @@
                             <h3 class="text-base font-semibold text-gray-900">{{ job.title }}</h3>
                             <p class="text-sm text-gray-500 mt-0.5">{{ job.company.company_name }}</p>
                         </div>
-                        {% if job.company.is_verified %}
-                        <span class="shrink-0 bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">Verified</span>
-                        {% endif %}
+                        <div class="shrink-0 flex flex-col items-end gap-1">
+                            {% if job.is_featured %}
+                            <span class="bg-indigo-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">Featured</span>
+                            {% endif %}
+                            {% if job.company.is_premium %}
+                            <span class="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">Gold</span>
+                            {% endif %}
+                            {% if job.company.is_verified %}
+                            <span class="bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">Verified</span>
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
                         {% if job.city %}
@@ -71,10 +80,10 @@
                             {{ job.city }}
                         </span>
                         {% endif %}
-                        <span class="bg-indigo-50 text-indigo-600 font-semibold px-2.5 py-1 rounded-full">{{ job.job_type }}</span>
+                        <span class="bg-indigo-50 text-indigo-600 font-semibold px-2.5 py-1 rounded-full">{{ job.workplace_type }}</span>
                     </div>
                     {% if job.salary_max_pkr %}
-                    <p class="mt-3 text-gray-900 font-bold">PKR {{ job.salary_min_pkr|pkr_compact }} - {{ job.salary_max_pkr|pkr_compact }}</p>
+                    <p class="mt-3 text-gray-900 font-bold">PKR {{ job.salary_min_pkr|pkr }} - {{ job.salary_max_pkr|pkr }}/mo</p>
                     {% endif %}
                 </button>
                 {% empty %}
@@ -97,20 +106,23 @@
                                 <h1 id="pane-title" class="text-2xl font-extrabold text-gray-900">{{ job.title }}</h1>
                                 <p id="pane-company" class="mt-1.5 text-gray-600">{{ job.company.company_name }}</p>
                             </div>
-                            {% if job.company.is_verified %}
-                            <span id="pane-verified" class="shrink-0 bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full">Verified Employer</span>
-                            {% else %}
-                            <span id="pane-verified" class="hidden"></span>
-                            {% endif %}
+                            <div id="pane-badges" class="shrink-0 flex flex-col items-end gap-1.5">
+                                {% if job.company.is_premium %}
+                                <span class="bg-amber-100 text-amber-700 text-xs font-bold px-2.5 py-1 rounded-full">Gold Employer</span>
+                                {% endif %}
+                                {% if job.company.is_verified %}
+                                <span class="bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full">Verified Employer</span>
+                                {% endif %}
+                            </div>
                         </div>
 
                         <div id="pane-chips" class="mt-5 flex flex-wrap items-center gap-3 text-sm border-t border-gray-100 pt-5">
                             {% if job.city %}
                             <span class="bg-gray-100 text-gray-600 font-medium px-3 py-1.5 rounded-full">{{ job.city }}</span>
                             {% endif %}
-                            <span class="bg-indigo-50 text-indigo-600 font-semibold px-3 py-1.5 rounded-full">{{ job.job_type }}</span>
+                            <span class="bg-indigo-50 text-indigo-600 font-semibold px-3 py-1.5 rounded-full">{{ job.workplace_type }}</span>
                             {% if job.salary_max_pkr %}
-                            <span id="pane-salary" class="text-gray-900 font-bold">PKR {{ job.salary_min_pkr|pkr_compact }} - {{ job.salary_max_pkr|pkr_compact }}</span>
+                            <span id="pane-salary" class="text-gray-900 font-bold">PKR {{ job.salary_min_pkr|pkr }} - {{ job.salary_max_pkr|pkr }}/mo</span>
                             {% else %}
                             <span id="pane-salary" class="hidden"></span>
                             {% endif %}
@@ -121,6 +133,13 @@
                             <h2 class="text-lg font-bold text-gray-900">Job Description</h2>
                             <p id="pane-description" class="mt-3 text-gray-700 leading-relaxed whitespace-pre-line">{{ job.description }}</p>
                         </div>
+
+                        {% if job.requirements %}
+                        <div class="mt-7">
+                            <h2 class="text-lg font-bold text-gray-900">Key Requirements</h2>
+                            <p id="pane-requirements" class="mt-3 text-gray-700 leading-relaxed whitespace-pre-line">{{ job.requirements }}</p>
+                        </div>
+                        {% endif %}
                     </div>
 
                     <div class="border-t border-gray-100 p-8 bg-gray-50">
@@ -171,27 +190,36 @@
         var csrfToken = csrf ? csrf.value : '';
         var body = document.getElementById('pane-body');
 
-        var verifiedHtml = job.verified
-            ? '<span class="shrink-0 bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full">Verified Employer</span>'
-            : '';
+        var badgesHtml = '';
+        if (job.premium) {
+            badgesHtml += '<span class="bg-amber-100 text-amber-700 text-xs font-bold px-2.5 py-1 rounded-full">Gold Employer</span>';
+        }
+        if (job.verified) {
+            badgesHtml += '<span class="bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full">Verified Employer</span>';
+        }
         var salaryHtml = job.salary_max
             ? '<span class="text-gray-900 font-bold">' + escapeHTML(job.salary_display) + '</span>'
+            : '';
+        var requirementsHtml = job.requirements
+            ? '<div class="mt-7"><h2 class="text-lg font-bold text-gray-900">Key Requirements</h2>' +
+              '<p class="mt-3 text-gray-700 leading-relaxed whitespace-pre-line">' + escapeHTML(job.requirements) + '</p></div>'
             : '';
 
         body.innerHTML = '' +
             '<div class="flex items-start justify-between gap-4">' +
                 '<div><h1 class="text-2xl font-extrabold text-gray-900">' + escapeHTML(job.title) + '</h1>' +
                 '<p class="mt-1.5 text-gray-600">' + escapeHTML(job.company) + '</p></div>' +
-                verifiedHtml +
+                '<div class="shrink-0 flex flex-col items-end gap-1.5">' + badgesHtml + '</div>' +
             '</div>' +
             '<div class="mt-5 flex flex-wrap items-center gap-3 text-sm border-t border-gray-100 pt-5">' +
                 (job.city ? '<span class="bg-gray-100 text-gray-600 font-medium px-3 py-1.5 rounded-full">' + escapeHTML(job.city) + '</span>' : '') +
-                '<span class="bg-indigo-50 text-indigo-600 font-semibold px-3 py-1.5 rounded-full">' + escapeHTML(job.job_type) + '</span>' +
+                '<span class="bg-indigo-50 text-indigo-600 font-semibold px-3 py-1.5 rounded-full">' + escapeHTML(job.workplace_type) + '</span>' +
                 salaryHtml +
                 '<span class="text-gray-400 ml-auto">Posted ' + escapeHTML(job.created) + '</span>' +
             '</div>' +
             '<div class="mt-7"><h2 class="text-lg font-bold text-gray-900">Job Description</h2>' +
-            '<p class="mt-3 text-gray-700 leading-relaxed whitespace-pre-line">' + escapeHTML(job.description) + '</p></div>';
+            '<p class="mt-3 text-gray-700 leading-relaxed whitespace-pre-line">' + escapeHTML(job.description) + '</p></div>' +
+            requirementsHtml;
 
         var applyForm = document.getElementById('apply-form');
         applyForm.setAttribute('action', '/job/' + job.id + '/apply/');

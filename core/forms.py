@@ -5,11 +5,13 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 
 from .models import (
+    APPLICATION_STATUS_CHOICES,
     PAKISTAN_CITIES,
+    WORKPLACE_CHOICES,
     CandidateProfile,
     CompanyProfile,
-    User,
     JobPosting,
+    User,
 )
 
 INPUT_CLASSES = (
@@ -64,8 +66,11 @@ class UserRegistrationForm(UserCreationForm):
 class CandidateProfileForm(forms.ModelForm):
     class Meta:
         model = CandidateProfile
-        fields = ['cnic_number', 'city', 'raw_skills_text', 'resume_pdf']
+        fields = ['title', 'cnic_number', 'city', 'raw_skills_text', 'resume_pdf']
         widgets = {
+            'title': forms.TextInput(
+                attrs={'class': INPUT_CLASSES, 'placeholder': 'e.g. Senior Python Developer'}
+            ),
             'cnic_number': forms.TextInput(
                 attrs={'class': INPUT_CLASSES, 'placeholder': 'XXXXX-XXXXXXX-X'}
             ),
@@ -85,6 +90,13 @@ class CandidateProfileForm(forms.ModelForm):
             ),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['resume_pdf'].required = True
+        self.fields['resume_pdf'].error_messages = {
+            'required': 'Please upload your resume in PDF format.'
+        }
+
     def clean_resume_pdf(self):
         resume = self.cleaned_data.get('resume_pdf')
         if resume:
@@ -96,10 +108,16 @@ class CandidateProfileForm(forms.ModelForm):
 class CompanyProfileForm(forms.ModelForm):
     class Meta:
         model = CompanyProfile
-        fields = ['company_name', 'description', 'logo']
+        fields = ['company_name', 'ntn_number', 'website', 'description', 'logo']
         widgets = {
             'company_name': forms.TextInput(
                 attrs={'class': INPUT_CLASSES, 'placeholder': 'Acme Corporation'}
+            ),
+            'ntn_number': forms.TextInput(
+                attrs={'class': INPUT_CLASSES, 'placeholder': '1234567-8'}
+            ),
+            'website': forms.URLInput(
+                attrs={'class': INPUT_CLASSES, 'placeholder': 'https://example.com'}
             ),
             'description': forms.Textarea(
                 attrs={
@@ -131,7 +149,7 @@ class CompanyProfileForm(forms.ModelForm):
 class JobPostingForm(forms.ModelForm):
     class Meta:
         model = JobPosting
-        exclude = ['company', 'is_active', 'created_at']
+        exclude = ['company', 'is_active', 'is_featured', 'created_at']
         widgets = {
             'title': forms.TextInput(
                 attrs={'class': INPUT_CLASSES, 'placeholder': 'e.g. Senior Django Developer'}
@@ -140,23 +158,26 @@ class JobPostingForm(forms.ModelForm):
                 attrs={
                     'class': INPUT_CLASSES,
                     'rows': 6,
-                    'placeholder': 'Describe the role, responsibilities and requirements...',
+                    'placeholder': 'Describe the role and responsibilities...',
+                }
+            ),
+            'requirements': forms.Textarea(
+                attrs={
+                    'class': INPUT_CLASSES,
+                    'rows': 4,
+                    'placeholder': 'e.g. Python, Django, PostgreSQL (one per line or comma separated)',
                 }
             ),
             'city': forms.Select(choices=PAKISTAN_CITIES, attrs={'class': SELECT_CLASSES}),
+            'workplace_type': forms.Select(
+                choices=WORKPLACE_CHOICES,
+                attrs={'class': SELECT_CLASSES},
+            ),
             'salary_min_pkr': forms.NumberInput(
                 attrs={'class': INPUT_CLASSES, 'placeholder': '100000'}
             ),
             'salary_max_pkr': forms.NumberInput(
                 attrs={'class': INPUT_CLASSES, 'placeholder': '250000'}
-            ),
-            'job_type': forms.Select(
-                attrs={'class': SELECT_CLASSES},
-                choices=[
-                    ('Remote', 'Remote'),
-                    ('Onsite', 'Onsite'),
-                    ('Hybrid', 'Hybrid'),
-                ],
             ),
         }
 
@@ -170,3 +191,12 @@ class JobPostingForm(forms.ModelForm):
                 'Maximum salary must be greater than or equal to minimum salary.',
             )
         return cleaned_data
+
+
+class ApplicationStatusForm(forms.Form):
+    STATUS_CHOICES = APPLICATION_STATUS_CHOICES
+
+    status = forms.ChoiceField(
+        choices=STATUS_CHOICES,
+        widget=forms.Select(attrs={'class': SELECT_CLASSES + ' py-2 text-sm'}),
+    )

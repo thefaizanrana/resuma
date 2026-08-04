@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load currency_tags %}
 
-{% block title %}Job Feed | Alfalah.app{% endblock %}
+{% block title %}Job Feed | RESUMA.pk{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 sm:px-6 py-12">
@@ -24,23 +24,31 @@
                 <div class="min-w-0">
                     <h3 class="text-lg font-semibold text-gray-900">{{ item.job.title }}</h3>
                     <p class="text-sm text-gray-500 mt-1">{{ item.job.company.company_name }}</p>
+                    {% if item.job.is_featured %}
+                    <span class="mt-1.5 inline-block bg-indigo-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">Featured</span>
+                    {% endif %}
                 </div>
-                {% if item.score >= 80 %}
-                <span class="shrink-0 bg-green-100 text-green-700 text-sm font-bold px-2.5 py-1 rounded-full">{{ item.score }}% Match</span>
-                {% elif item.score >= 50 %}
-                <span class="shrink-0 bg-amber-100 text-amber-700 text-sm font-bold px-2.5 py-1 rounded-full">{{ item.score }}% Match</span>
-                {% else %}
-                <span class="shrink-0 bg-red-100 text-red-600 text-sm font-bold px-2.5 py-1 rounded-full">{{ item.score }}% Match</span>
-                {% endif %}
+                <div class="shrink-0 flex flex-col items-end gap-1">
+                    {% if item.job.company.is_premium %}
+                    <span class="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-0.5 rounded-full">Gold</span>
+                    {% endif %}
+                    {% if item.score >= 80 %}
+                    <span class="bg-green-100 text-green-700 text-sm font-bold px-2.5 py-1 rounded-full">{{ item.score }}% Match</span>
+                    {% elif item.score >= 50 %}
+                    <span class="bg-amber-100 text-amber-700 text-sm font-bold px-2.5 py-1 rounded-full">{{ item.score }}% Match</span>
+                    {% else %}
+                    <span class="bg-red-100 text-red-600 text-sm font-bold px-2.5 py-1 rounded-full">{{ item.score }}% Match</span>
+                    {% endif %}
+                </div>
             </div>
 
             <div class="mt-4 flex flex-wrap items-center gap-2 text-xs">
                 {% if item.job.city %}
                 <span class="bg-gray-100 text-gray-600 font-medium px-2.5 py-1 rounded-full">{{ item.job.city }}</span>
                 {% endif %}
-                <span class="bg-indigo-50 text-indigo-600 font-semibold px-2.5 py-1 rounded-full">{{ item.job.job_type }}</span>
+                <span class="bg-indigo-50 text-indigo-600 font-semibold px-2.5 py-1 rounded-full">{{ item.job.workplace_type }}</span>
                 {% if item.job.salary_max_pkr %}
-                <span class="bg-gray-100 text-gray-700 font-semibold px-2.5 py-1 rounded-full">PKR {{ item.job.salary_min_pkr|pkr_compact }} - {{ item.job.salary_max_pkr|pkr_compact }}</span>
+                <span class="bg-gray-100 text-gray-700 font-semibold px-2.5 py-1 rounded-full">PKR {{ item.job.salary_min_pkr|pkr }} - {{ item.job.salary_max_pkr|pkr }}/mo</span>
                 {% endif %}
             </div>
 

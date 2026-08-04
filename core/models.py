@@ -7,25 +7,31 @@ PAKISTAN_CITIES = [
     ('Lahore', 'Lahore'),
     ('Islamabad', 'Islamabad'),
     ('Rawalpindi', 'Rawalpindi'),
+    ('Peshawar', 'Peshawar'),
     ('Faisalabad', 'Faisalabad'),
     ('Multan', 'Multan'),
-    ('Hyderabad', 'Hyderabad'),
-    ('Peshawar', 'Peshawar'),
     ('Quetta', 'Quetta'),
     ('Sialkot', 'Sialkot'),
-    ('Gujranwala', 'Gujranwala'),
-    ('Other', 'Other'),
+    ('Remote', 'Remote Pakistan'),
 ]
 
-JOB_TYPES = [
-    ('Remote', 'Remote'),
+WORKPLACE_CHOICES = [
     ('Onsite', 'Onsite'),
+    ('Remote', 'Remote'),
     ('Hybrid', 'Hybrid'),
 ]
 
+APPLICATION_STATUS_CHOICES = [
+    ('Submitted', 'Submitted'),
+    ('Review', 'In Review'),
+    ('Shortlist', 'Shortlisted'),
+    ('Interview', 'Interview'),
+    ('Rejected', 'Rejected'),
+]
+
 phone_validator = RegexValidator(
-    regex=r'^\+92\d{10}$',
-    message='Phone number must be in the format +92XXXXXXXXXX.',
+    regex=r'^\+92[0-9]{10}$',
+    message="Phone number must be entered in the format: '+92XXXXXXXXXX'.",
 )
 
 cnic_validator = RegexValidator(
@@ -43,6 +49,7 @@ class User(AbstractUser):
     phone_number = models.CharField(
         max_length=15,
         blank=True,
+        null=True,
         validators=[phone_validator],
     )
 
@@ -54,6 +61,24 @@ class User(AbstractUser):
         return self.username
 
 
+class SubscriptionTier(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    price_pkr = models.PositiveIntegerField(default=0, verbose_name='Price (PKR)')
+    max_jobs = models.PositiveIntegerField(default=5, verbose_name='Max Active Jobs')
+    has_featured_badge = models.BooleanField(default=False, verbose_name='Featured Badge')
+    has_cpp_matching_priority = models.BooleanField(
+        default=False,
+        verbose_name='C++ Matching Priority',
+    )
+
+    class Meta:
+        verbose_name = 'Subscription Tier'
+        verbose_name_plural = 'Subscription Tiers'
+
+    def __str__(self):
+        return self.name
+
+
 class CompanyProfile(models.Model):
     user = models.OneToOneField(
         User,
@@ -61,10 +86,20 @@ class CompanyProfile(models.Model):
         related_name='company_profile',
     )
     company_name = models.CharField(max_length=255, db_index=True)
-    ntn_number = models.CharField(max_length=30, blank=True, verbose_name='NTN Number')
-    description = models.TextField(blank=True)
+    ntn_number = models.CharField(max_length=20, blank=True, verbose_name='NTN Number')
+    website = models.URLField(blank=True, verbose_name='Website URL')
+    description = models.TextField(verbose_name='Company Description')
     logo = models.ImageField(upload_to='company_logos/', blank=True, null=True)
+    tier = models.ForeignKey(
+        SubscriptionTier,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='companies',
+        verbose_name='Subscription Tier',
+    )
     is_verified = models.BooleanField(default=False, db_index=True)
+    is_premium = models.BooleanField(default=False, verbose_name='Premium (Gold Badge)')
 
     class Meta:
         verbose_name = 'Company Profile'
@@ -88,9 +123,20 @@ class CandidateProfile(models.Model):
         validators=[cnic_validator],
         verbose_name='CNIC Number',
     )
-    city = models.CharField(max_length=50, choices=PAKISTAN_CITIES, blank=True, db_index=True)
-    resume_pdf = models.FileField(upload_to='resumes/', blank=True, null=True, verbose_name='Resume (PDF)')
+    city = models.CharField(
+        max_length=50,
+        choices=PAKISTAN_CITIES,
+        default='Lahore',
+        db_index=True,
+    )
+    title = models.CharField(max_length=150, blank=True, verbose_name='Professional Title')
     raw_skills_text = models.TextField(blank=True, verbose_name='Skills')
+    resume_pdf = models.FileField(
+        upload_to='resumes/',
+        null=True,
+        verbose_name='Resume (PDF)',
+    )
+    is_featured = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'Candidate Profile'
@@ -104,14 +150,21 @@ class JobPosting(models.Model):
     company = models.ForeignKey(
         CompanyProfile,
         on_delete=models.CASCADE,
-        related_name='job_postings',
+        related_name='jobs',
     )
     title = models.CharField(max_length=255, db_index=True)
     description = models.TextField()
-    city = models.CharField(max_length=50, choices=PAKISTAN_CITIES, blank=True, db_index=True)
+    requirements = models.TextField(blank=True, verbose_name='Key Requirements')
+    city = models.CharField(max_length=50, choices=PAKISTAN_CITIES, db_index=True)
+    workplace_type = models.CharField(
+        max_length=10,
+        choices=WORKPLACE_CHOICES,
+        default='Onsite',
+        verbose_name='Workplace Type',
+    )
     salary_min_pkr = models.PositiveIntegerField(default=0, verbose_name='Minimum Salary (PKR)')
     salary_max_pkr = models.PositiveIntegerField(default=0, verbose_name='Maximum Salary (PKR)')
-    job_type = models.CharField(max_length=10, choices=JOB_TYPES, default='Onsite')
+    is_featured = models.BooleanField(default=False, db_index=True)
     is_active = models.BooleanField(default=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
@@ -127,7 +180,36 @@ class JobPosting(models.Model):
         return self.title
 
 
+class SavedJob(models.Model):
+    candidate = models.ForeignKey(
+        CandidateProfile,
+        on_delete=models.CASCADE,
+        related_name='saved_jobs',
+    )
+    job = models.ForeignKey(
+        JobPosting,
+        on_delete=models.CASCADE,
+        related_name='saved_by',
+    )
+    saved_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Saved Job'
+        verbose_name_plural = 'Saved Jobs'
+        unique_together = ('candidate', 'job')
+        ordering = ['-saved_at']
+
+    def __str__(self):
+        return f'{self.candidate} saved {self.job.title}'
+
+
 class Application(models.Model):
+    STATUS_SUBMITTED = 'Submitted'
+    STATUS_REVIEW = 'Review'
+    STATUS_SHORTLIST = 'Shortlist'
+    STATUS_INTERVIEW = 'Interview'
+    STATUS_REJECTED = 'Rejected'
+
     candidate = models.ForeignKey(
         CandidateProfile,
         on_delete=models.CASCADE,
@@ -137,6 +219,12 @@ class Application(models.Model):
         JobPosting,
         on_delete=models.CASCADE,
         related_name='applications',
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=APPLICATION_STATUS_CHOICES,
+        default=STATUS_SUBMITTED,
+        db_index=True,
     )
     match_score = models.PositiveIntegerField(default=0)
     applied_at = models.DateTimeField(auto_now_add=True, db_index=True)
