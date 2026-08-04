@@ -1,0 +1,37 @@
+# Legacy / archived scaffold (kept on disk, not tracked)
+_legacy/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Django
+db.sqlite3
+staticfiles/
+media/
+*.log
+
+# Environment
+.env
+
+# C++ / pybind11 build artifacts
+cpp_engine/build/
+cpp_engine/*.so
+cpp_engine/*.egg-info/
+
+# Tailwind standalone binary
+theme/static_src/tailwindcss
+theme/static_src/tailwindcss.exe
+
+# Node
+node_modules/
+package-lock.json
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/

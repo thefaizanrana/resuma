@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Your Account | Alfalah.app{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 sm:px-6 py-14">
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden grid grid-cols-1 md:grid-cols-2">
+        <div class="bg-gradient-to-br from-indigo-600 to-violet-700 p-10 text-white hidden md:flex flex-col justify-between">
+            <div>
+                <h2 class="text-3xl font-extrabold leading-tight">
+                    Join the top talent network
+                </h2>
+                <p class="mt-4 text-indigo-100 leading-relaxed">
+                    Whether you are hiring world-class professionals or landing your dream
+                    role, Alfalah.app connects Pakistan's workforce with the country's
+                    most exciting companies.
+                </p>
+            </div>
+            <ul class="space-y-4 text-sm text-indigo-100">
+                <li class="flex items-center gap-3">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 font-bold">1</span>
+                    Create your free account in seconds
+                </li>
+                <li class="flex items-center gap-3">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 font-bold">2</span>
+                    Set up your profile or company
+                </li>
+                <li class="flex items-center gap-3">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 font-bold">3</span>
+                    Get matched by our C++ matching engine
+                </li>
+            </ul>
+        </div>
+
+        <div class="p-8 sm:p-10">
+            <h1 class="text-2xl font-bold text-gray-900">Create your account</h1>
+            <p class="mt-1 text-sm text-gray-500">Join the largest talent network in Pakistan.</p>
+
+            <form method="post" action="{% url 'core:register' %}" class="mt-8 space-y-5" novalidate>
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                <div class="rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm p-3">
+                    {{ form.non_field_errors|join:', ' }}
+                </div>
+                {% endif %}
+
+                {% for field in form %}
+                <div>
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        {{ field.label }}
+                    </label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <p class="mt-1 text-xs text-gray-400">{{ field.help_text|safe }}</p>
+                    {% endif %}
+                    {% for error in field.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+
+                <button type="submit" class="w-full rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 font-semibold shadow-sm transition">
+                    Create Account
+                </button>
+            </form>
+
+            <p class="mt-6 text-center text-sm text-gray-500">
+                Already have an account?
+                <a href="{% url 'login' %}" class="text-indigo-600 font-semibold hover:text-indigo-800">Sign in</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

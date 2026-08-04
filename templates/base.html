@@ -1,0 +1,82 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block title %}Alfalah.app — Pakistan's Premium Job Platform{% endblock %}</title>
+    {% tailwind_css %}
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="bg-gray-50 text-gray-900 antialiased min-h-screen flex flex-col">
+<header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200/80">
+    <nav class="container mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+        <a href="{% url 'core:home' %}" class="text-2xl font-extrabold tracking-tight text-indigo-600">
+            Alfalah<span class="text-gray-900">.app</span>
+        </a>
+        <ul class="hidden md:flex items-center space-x-8 text-sm font-medium">
+            <li><a href="{% url 'core:home' %}" class="text-gray-600 hover:text-indigo-600 transition">Find Jobs</a></li>
+            {% if user.is_authenticated and user.is_employer %}
+                <li><a href="{% url 'core:create_job' %}" class="text-gray-600 hover:text-indigo-600 transition">Post a Job</a></li>
+                <li><a href="{% url 'core:ats' %}" class="text-gray-600 hover:text-indigo-600 transition">Applicants</a></li>
+            {% elif user.is_authenticated and user.is_candidate %}
+                <li><a href="{% url 'core:job_feed' %}" class="text-gray-600 hover:text-indigo-600 transition">Job Feed</a></li>
+                <li><a href="{% url 'core:candidate_dashboard' %}" class="text-gray-600 hover:text-indigo-600 transition">My Dashboard</a></li>
+            {% else %}
+                <li><a href="{% url 'core:register' %}" class="text-gray-600 hover:text-indigo-600 transition">Join Now</a></li>
+            {% endif %}
+        </ul>
+        <div class="flex items-center space-x-3">
+            {% if user.is_authenticated %}
+                <span class="hidden sm:inline text-sm text-gray-500">{{ user.username }}</span>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="text-sm font-semibold text-gray-600 hover:text-indigo-600 transition">
+                        Sign Out
+                    </button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}" class="text-sm font-semibold text-gray-700 hover:text-indigo-600 transition">
+                    Sign In
+                </a>
+                <a href="{% url 'core:register' %}" class="rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 text-sm font-semibold shadow-sm transition">
+                    Get Started
+                </a>
+            {% endif %}
+        </div>
+    </nav>
+</header>
+
+{% if messages %}
+<div class="container mx-auto px-4 sm:px-6 mt-4 space-y-3">
+    {% for message in messages %}
+    <div class="rounded-lg px-4 py-3 text-sm font-medium shadow-sm
+        {% if message.tags == 'success' %}bg-green-50 text-green-700 border border-green-200
+        {% elif message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+        {% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<main class="flex-grow">
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="bg-white border-t border-gray-200 mt-16">
+    <div class="container mx-auto px-4 sm:px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p class="text-sm text-gray-500">&copy; {% now "Y" %} Alfalah.app. Built for Pakistan's workforce.</p>
+        <ul class="flex items-center space-x-6 text-sm text-gray-500">
+            <li><a href="{% url 'core:home' %}" class="hover:text-indigo-600 transition">Find Jobs</a></li>
+            <li><a href="{% url 'core:register' %}" class="hover:text-indigo-600 transition">For Employers</a></li>
+            <li><a href="{% url 'admin:index' %}" class="hover:text-indigo-600 transition">Admin</a></li>
+        </ul>
+    </div>
+</footer>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>
