@@ -3,3 +3,6 @@ django-tailwind==4.5.0
 psycopg2-binary==2.9.12
 Pillow==12.3.0
 pybind11==3.0.4
+gunicorn
+dj-database-url
+whitenoise
