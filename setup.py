@@ -4,7 +4,7 @@ from pybind11.setup_helpers import Pybind11Extension, build_ext
 ext_modules = [
     Pybind11Extension(
         "job_matcher",
-        ["job_matcher.cpp"], 
+    ["cpp_engine/job_matcher.cpp"],
     ),
 ]
 
